@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <title>Drosselplayer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Drosselplayer">
+    <meta name="author" content="Underground Knowledge Foundation">
+    <style type="text/css" media="screen">
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #drosselkom {
+        font-family: Arial,Geneva,Franklin Gothic,Helvetica,sans-serif;
+        position: absolute;
+        width: 640px;
+        height: 0px;
+        opacity: 0;
+        background-color: #D10075;
+        color: #fff;
+        overflow: hidden;
+      }
+      #drosselkom h3{
+        text-align: center;
+        padding: 5px 10px;
+      }
+      #drosselkom a, #drosselkom a:visited {
+        color: #fff;
+        float: left;
+        text-align: center;
+        display: block;
+        padding: 10px 15px;
+        margin: 0 10px;
+        background-color: #E15F9B;
+      }
+      #drosselkom a:hover {
+        outline: 1px #fff solid;
+      }
+      #drosselkom .footer {
+        text-transform: uppercase;
+        width: 600px;
+        clear:left;
+        padding: 10px 20px 10px 20px;
+        text-align: right;
+        background-color: #fff;
+        color: #E15F9B;
+        position: absolute;
+        bottom:20px;
+        font-size: 20px;
+      }
+    </style>
+    <script type="text/javascript" src="swfobject/swfobject.js"></script>
+  </head>
+  <body>
+  <div id="drosselkom">
+    <h3>Ihr YouTube-Datenvolumen ist aufgebraucht</h3>
+    <div>
+      <a href="http://www.echtesnetz.de/">
+        Mehr Informationen
+      </a>
+      <a href="https://epetitionen.bundestag.de/content/petitionen/_2013/_04/_23/Petition_41906.html">
+        Petition für mehr Internet
+      </a>
+      <a href="https://netzpolitik.org/spenden/">
+        netzpolitik.org spenden
+      </a>
+    </div>
+    <div class="footer">
+      Erleben, was verschwindet
+    </div>
+  </div>
+  <div id="ytapiplayer">
+    You need Flash player 8+ and JavaScript enabled to view this video.
+  </div>
+  <div>
+  <textarea>
+    <iframe frameBorder="0" width="640px" height="360px" src="http://stefanwehrmeyer.com/projects/drosselplayer/?v=YOUTUBEID"></iframe>
+  </textarea>
+  </div>
+<script>
+(function(){
+  var ytplayer;
+  var currentStep = 0;
+
+  function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+
+  var params = { allowScriptAccess: "always" };
+  var atts = { id: "myytplayer" };
+  var video = getParameterByName('v');
+  if (!video) {
+    video = 'mIQToVqDMb8';
+  }
+  swfobject.embedSWF("http://www.youtube.com/v/" + video + "?enablejsapi=1&playerapiid=ytplayer&version=3",
+                     "ytapiplayer", "640", "360", "8", null, null, params, atts);
+
+  var t1 = getParameterByName('t1');
+  if (t1 === null) { t1 = 5000; }
+  else {t1 = parseInt(t1); }
+
+  var t2 = getParameterByName('t2');
+  if (t2 === null) { t2 = 5000; }
+  else {t2 = parseInt(t2); }
+
+  var steps = [
+    [t1, function(){
+      ytplayer.setPlaybackQuality('tiny');
+    }],
+    [t2, function(){
+      var volInterval = window.setInterval(function(){
+        document.getElementById('drosselkom').style.height = '360px';
+        var vol = ytplayer.getVolume();
+        vol -= 5;
+        if (vol <= 0) { vol = 0; }
+        document.getElementById('drosselkom').style.opacity = (100 - vol) / 100;
+        if (vol === 0) {
+          window.clearInterval(volInterval);
+          ytplayer.stopVideo();
+          ytplayer.clearVideo();
+        }
+        ytplayer.setVolume(vol);
+      }, 250);
+    }]
+  ];
+
+window.onYouTubePlayerReady = function(playerId) {
+  ytplayer = document.getElementById("myytplayer");
+  ytplayer.addEventListener("onStateChange", 'onytplayerStateChange');
+}
+
+function runStep(stepId) {
+  if (steps[stepId] === undefined) {
+    return;
+  }
+  window.setTimeout(function(){
+    steps[stepId][1]();
+    currentStep += 1;
+    runStep(currentStep);
+  }, steps[stepId][0]);
+}
+
+window.onytplayerStateChange = function(newState) {
+   if (newState === 1 && currentStep === 0){
+    runStep(currentStep);
+   }
+}
+}());
+    </script>
+  </body>
+</html>
